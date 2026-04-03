@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="Rasiii Mart – Direct wholesale organic groceries. Best prices, fast delivery.">
+    <title>Rasiii Mart</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Styling -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <!-- Sidebar Wrapper -->
+    <div class="sidebar-wrapper" id="sidebar">
+        <div class="sidebar-logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Rasiii Mart Logo" style="filter: brightness(0) saturate(100%) invert(35%) sepia(50%) saturate(718%) hue-rotate(85deg) brightness(97%) contrast(92%);">
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+            <a class="nav-link {% if request.endpoint == 'shop' %}active{% endif %}" href="{{ url_for('shop') }}">
+                <i class="fa-solid fa-basket-shopping"></i> Collection
+            </a>
+            
+            {% if session.get('user') %}
+            <a class="nav-link {% if request.endpoint == 'prev_orders' %}active{% endif %}" href="{{ url_for('prev_orders') }}">
+                <i class="fa-solid fa-clock-rotate-left"></i> My Orders
+            </a>
+            {% endif %}
+            
+            <a class="nav-link {% if request.endpoint == 'track_order' %}active{% endif %}" href="{{ url_for('track_order') }}">
+                <i class="fa-solid fa-truck-fast"></i> Track Order
+            </a>
+            <a class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('contact') }}">
+                <i class="fa-solid fa-envelope-open-text"></i> Contact
+            </a>
+
+            <div class="mt-4 border-top pt-4">
+                {% if session.get('user') %}
+                <div class="px-3 mb-3 small text-muted text-uppercase fw-bold">Account</div>
+                <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+                {% else %}
+                <a class="nav-link" href="{{ url_for('login') }}">
+                    <i class="fa-solid fa-user-lock"></i> Login / Register
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a class="btn btn-custom w-100 py-3" href="{{ url_for('cart') }}">
+                <i class="fa-solid fa-cart-shopping"></i> 
+                <span>Cart</span>
+                <span class="cart-badge bg-white text-dark ms-auto" id="cart-badge-sidebar">
+                    {% set total_qty = 0 %}
+                    {% if session.get('cart') %}
+                        {% for item in session['cart'].values() %}
+                            {% set total_qty = total_qty + item.quantity %}
+                        {% endfor %}
+                    {% endif %}
+                    {{ total_qty }}
+                </span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Header / Navbar -->
+    <div class="mobile-header">
+        <button class="btn btn-outline-dark border-0 p-0 fs-3" id="sidebar-toggle">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" height="32" style="filter: brightness(0) saturate(100%) invert(35%) sepia(50%) saturate(718%) hue-rotate(85deg) brightness(97%) contrast(92%);">
+        <a class="btn btn-outline-warning rounded-circle p-2 border-0" href="{{ url_for('cart') }}">
+            <i class="fa-solid fa-cart-shopping fs-4 text-dark"></i>
+        </a>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-content">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mb-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" style="border-radius: 12px;" role="alert">
+                        <strong>{{ message }}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+        <footer class="mt-5">
+            <div class="container text-center">
+                <h2 class="display-6 fw-bold mb-4" style="color: var(--accent-primary); font-family: 'Playfair Display', serif;">Rasiii Mart</h2>
+                <p class="text-muted mb-0">&copy; 2026 Rasiii Mart. Crafted for Quality.</p>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar Toggle for Mobile
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const toggle = document.getElementById('sidebar-toggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        if(toggle) toggle.addEventListener('click', toggleSidebar);
+        if(overlay) overlay.addEventListener('click', toggleSidebar);
+
+        // Cart Logic
+        function addToCart(productId) {
+            fetch('/api/add-to-cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update sidebar cart badge
+                    const badge = document.getElementById('cart-badge-sidebar');
+                    if (badge) badge.innerText = data.cart_count;
+
+                    Swal.fire({
+                        title: 'Added!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        iconColor: '#2563eb',
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            })
+            .catch(err => console.error('Error adding to cart:', err));
+        }
+    </script>
+</body>
+</html>

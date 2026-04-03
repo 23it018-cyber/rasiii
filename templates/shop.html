@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-3 mb-3">Our Collection</h1>
+        <p class="text-muted lead">Hand-picked organic essentials for your home.</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="row mb-5 g-3 justify-content-center">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 border-soft"><i class="fa-solid fa-search"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="What are you looking for?" onkeyup="filterProducts()">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="categoryFilter" onchange="filterProducts()">
+                <option value="all">All Categories</option>
+                {% for category in categories.keys() %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    {% for category, items in categories.items() %}
+    <div class="category-section mb-5" id="section-{{ loop.index }}">
+        <h2 class="category-title mb-5">{{ category }}</h2>
+        <div class="row g-4 mt-2">
+            {% for item in items %}
+            <div class="col-sm-6 col-md-4 col-lg-3 product-wrapper" data-category="{{ category }}" data-name="{{ item.Name | lower }}">
+                <div class="grocery-card">
+                    <div class="card-img-wrapper">
+                        <img src="{{ item.Image }}" alt="{{ item.Name }}" class="grocery-img" loading="lazy">
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title h5">{{ item.Name }}</h3>
+                        <p class="text-muted small mb-0">Availability: {{ item.Stock }} In Stock</p>
+                        <div class="price">
+                            ₹{{ item.Price }} 
+                            <span class="fs-6 text-muted ms-1 fw-normal">{% if item.Unit %}/ {{ item.Unit }}{% endif %}</span>
+                        </div>
+                        
+                        {% if item.Stock > 0 %}
+                        <button class="btn btn-custom w-100 mt-2" onclick="addToCart('{{ item.ID }}')">
+                            <i class="fa-solid fa-plus-circle me-1"></i> Add to Cart
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary w-100 mt-2" disabled>
+                            Out of Stock
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function filterProducts() {
+    let search = document.getElementById('searchInput').value.toLowerCase();
+    let category = document.getElementById('categoryFilter').value;
+    
+    document.querySelectorAll('.product-wrapper').forEach(function(el) {
+        let name = el.getAttribute('data-name');
+        let cat = el.getAttribute('data-category');
+        
+        let matchSearch = name.includes(search);
+        let matchCategory = (category === 'all' || cat === category);
+        
+        if (matchSearch && matchCategory) {
+            el.style.display = '';
+            el.classList.add('visible-child');
+        } else {
+            el.style.display = 'none';
+            el.classList.remove('visible-child');
+        }
+    });
+
+    document.querySelectorAll('.category-section').forEach(function(section) {
+        if (search === '' && category === 'all') {
+            section.style.display = '';
+            return;
+        }
+        let visibleItems = section.querySelectorAll('.product-wrapper.visible-child').length;
+        if (visibleItems === 0) {
+            section.style.display = 'none';
+        } else {
+            section.style.display = '';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.product-wrapper').forEach(el => el.classList.add('visible-child'));
+});
+</script>
+{% endblock %}
