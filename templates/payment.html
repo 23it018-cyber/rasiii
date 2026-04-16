@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold" style="color: var(--accent-primary); font-family: var(--font-heading);">Secure Checkout</h1>
+                <p class="lead text-muted">Complete your organic grocery order for **Rasiii Mart**.</p>
+            </div>
+
+            <div class="grocery-card p-0 shadow-lg border-0 overflow-hidden">
+                <div class="p-4 p-md-5 bg-white border-bottom border-light">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted fw-bold text-uppercase small tracking-wider">Order Total</span>
+                    </div>
+                    <h2 class="display-3 fw-bold" style="color: var(--accent-primary);">₹{{ total }}</h2>
+                </div>
+
+                <div class="p-4 p-md-5 bg-light">
+                    <!-- Nav Tabs for Payment Methods -->
+                    <ul class="nav nav-pills nav-fill mb-5 p-2 bg-white rounded-pill shadow-sm" id="paymentTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active rounded-pill py-3 fw-bold" id="upi-tab" data-bs-toggle="tab" data-bs-target="#upi" type="button" role="tab">
+                                <i class="fa-solid fa-qrcode me-2"></i> UPI / QR Scan
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill py-3 fw-bold text-muted" id="card-tab" data-bs-toggle="tab" data-bs-target="#card" type="button" role="tab">
+                                <i class="fa-solid fa-credit-card me-2"></i> Card Payment
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="paymentTabContent">
+                        <!-- UPI & QR SCANNER TAB -->
+                        <div class="tab-pane fade show active" id="upi" role="tabpanel">
+                            <div class="text-center py-4">
+                                <p class="mb-4 fw-bold">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
+                                
+                                <div class="bg-white p-4 rounded-4 shadow-sm mb-4 d-inline-block border border-2 border-primary border-opacity-10">
+                                    {% set upi_str = "upi://pay?pa=rasiiimart@upi&pn=RasiiiMart&am=" ~ total ~ "&cu=INR&tn=OrderFromRasiiiMart" %}
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ upi_str | urlencode }}" 
+                                         alt="Payment QR Code" 
+                                         class="img-fluid"
+                                         style="max-width: 250px;">
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <p class="mb-1 text-muted small">Merchant VPA</p>
+                                    <h5 class="fw-bold text-dark">rasiiimart@okaxis</h5>
+                                </div>
+
+                                <div class="alert alert-info border-0 rounded-4 py-3 d-flex align-items-center">
+                                    <i class="fa-solid fa-shield-halved fs-4 me-3 text-info"></i>
+                                    <div class="text-start small">
+                                        Scan the code and complete payment. Once done, click the confirmation button below to finalize your order.
+                                    </div>
+                                </div>
+
+                                <form action="{{ url_for('payment') }}" method="POST">
+                                    <button type="submit" class="btn btn-custom w-100 py-4 mt-4 fs-5" id="confirm-payment-btn">
+                                        <i class="fa-solid fa-check-circle me-2"></i> I have Paid ₹{{ total }}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- CARD PAYMENT TAB -->
+                        <div class="tab-pane fade" id="card" role="tabpanel">
+                            <form action="{{ url_for('payment') }}" method="POST" id="card-form">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-uppercase">Card Number (16 Digits)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-credit-card text-muted"></i></span>
+                                        <input type="text" id="cardNumber" class="form-control border-start-0 ps-0" placeholder="0000 0000 0000 0000" maxlength="16" pattern="\d{16}" title="Please enter 16 digits" required>
+                                    </div>
+                                </div>
+                                <div class="row g-4 mb-5">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-uppercase">Expiry Date (MM/YY)</label>
+                                        <input type="text" id="expiryDate" class="form-control" placeholder="MM / YY" maxlength="5" pattern="\d{2}/\d{2}" title="Format: MM/YY" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-uppercase">Security CVV (3 Digits)</label>
+                                        <input type="password" id="cvvNumber" class="form-control" placeholder="•••" maxlength="3" pattern="\d{3}" title="Please enter 3 digits" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-custom w-100 py-3 rounded-pill fw-bold" id="card-pay-btn">
+                                    Confirm Card Payment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <p class="text-muted small mb-0">
+                            <i class="fa-solid fa-lock text-success me-1"></i> SSL Encrypted & Secure | Transaction Handled by Rasiii Mart
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Real-time Card Constraints
+    const cardField = document.getElementById('cardNumber');
+    const expiryField = document.getElementById('expiryDate');
+    const cvvField = document.getElementById('cvvNumber');
+
+    if(cardField) {
+        cardField.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').substring(0, 16);
+        });
+    }
+
+    if(expiryField) {
+        expiryField.addEventListener('input', function(e) {
+            let v = this.value.replace(/\D/g, '').substring(0, 4);
+            if(v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
+            this.value = v;
+        });
+    }
+
+    if(cvvField) {
+        cvvField.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').substring(0, 3);
+        });
+    }
+
+    document.getElementById('card-pay-btn')?.addEventListener('click', function() {
+        if(document.getElementById('card-form').checkValidity()) {
+            this.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-2"></i> Processing Bank...';
+            this.classList.add('disabled');
+        }
+    });
+
+    document.getElementById('confirm-payment-btn')?.addEventListener('click', function() {
+        this.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-2"></i> Verifying Transaction...';
+        this.classList.add('disabled');
+    });
+</script>
+{% endblock %}
